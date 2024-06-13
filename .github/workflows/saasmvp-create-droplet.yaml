@@ -32,7 +32,7 @@ jobs:
           fi
       - name: Create DigitalOcean saasmvp Docker Droplet
         if: env.exists == 'false'
-        run: doctl compute droplet create $DOMAIN_NAME --image 150187231 --size s-1vcpu-1gb --region nyc1 --wait 
+        run: doctl compute droplet create $DOMAIN_NAME --image 158062325 --size s-1vcpu-1gb --region nyc1 --wait 
       - name: Store saasmvp SSH public key in DigitalOcean Docker Droplet
         if: env.exists == 'false'
         run: doctl compute ssh-key create saasmvp --public-key "${{ secrets.SAASMVP_SSH_KEY_PUB }}"
