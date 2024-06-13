@@ -23,18 +23,18 @@ configDocker () {
     docker volume prune -f
     # Remove Docker Images
     echo "** remove Docker images **"
-    docker rmi rickgregg/rest-saasmvp-org-nginx:1.21.6
-    docker rmi rickgregg/rest-saasmvp-org-nuxtapp:latest
-    docker rmi rickgregg/rest-saasmvp-org-mysql:8.1.0
-    docker rmi rickgregg/rest-saasmvp-org-adminer:4.8.1
+    docker rmi rickgregg/saasmvp-nginx:1.21.6
+    docker rmi rickgregg/saasmvp-nuxtapp:latest
+    docker rmi rickgregg/saasmvp-mysql:8.1.0
+    docker rmi rickgregg/saasmvp-adminer:4.8.1
   fi
 
   # pull docker images
   echo "** pulling Docker images from repository **"
-  docker pull rickgregg/rest-saasmvp-org-nginx:1.21.6
-  docker pull rickgregg/rest-saasmvp-org-nuxtapp:latest
-  docker pull rickgregg/rest-saasmvp-org-mysql:8.1.0
-  docker pull rickgregg/rest-saasmvp-org-adminer:4.8.1
+  docker pull rickgregg/saasmvp-nginx:1.21.6
+  docker pull rickgregg/saasmvp-nuxtapp:latest
+  docker pull rickgregg/saasmvp-mysql:8.1.0
+  docker pull rickgregg/saasmvp-adminer:4.8.1
 
   # create docker containers from docker images
   echo "** creating Docker containers **"
