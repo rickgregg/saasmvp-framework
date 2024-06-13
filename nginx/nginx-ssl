@@ -1,0 +1,29 @@
+# nginx-ssl
+# renamed default.conf by the Docker saasmvp-nginx container on installation. SEE: nginx-config.sh
+# NOTE: This web server does uses SSL and is SECURE. Use for production only
+# replace demo.saasmvp.org www.demo.saasmvp.org with your domain name(s)
+
+server {
+    listen       80;
+    server_name  rest.saasmvp.org www.rest.saasmvp.org;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }    
+}  
+
+server {
+    listen 443 ssl;
+    server_name  rest.saasmvp.org www.rest.saasmvp.org;
+
+    ssl_certificate /etc/letsencrypt/live/rest.saasmvp.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/rest.saasmvp.org/privkey.pem;
+   
+    location / {
+    proxy_pass http://nuxtapp:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+

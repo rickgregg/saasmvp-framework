@@ -1,0 +1,19 @@
+{
+  "name": "dev-saasmvp",
+  "dockerComposeFile": "compose-vscode.yaml",
+  "service": "dev-nuxtapp",
+  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
+  "postStartCommand": "./.devcontainer/dev-saasmvp.sh",
+
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": ["vue.volar", 
+                     "christian-kohler.npm-intellisense",
+                     "esbenp.prettier-vscode",
+                     "humao.rest-client"
+                    ]
+    }
+  }
+}

@@ -1,0 +1,47 @@
+# --- saasmvp-create-droplet.yaml --- 
+# Github Workflow File
+# Deploys sassmvp to DigitalOcean
+#
+# richard l. gregg
+# october 22, 2023 -!*!- HAPPY BIRHDAY DAD! -!*!-
+
+---
+name: saasmvp-create-droplet
+
+on: 
+  - workflow_dispatch
+
+env:
+  DOMAIN_NAME: "demo.saasmvp.org"
+
+jobs:
+  create-droplet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install DigitalOcean doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Does saasmvp Docker Droplet Exist?
+        run: |
+          if doctl compute droplet get $DOMAIN_NAME --format Name | grep -Po $DOMAIN_NAME >/dev/null
+          then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
+      - name: Create DigitalOcean saasmvp Docker Droplet
+        if: env.exists == 'false'
+        run: doctl compute droplet create $DOMAIN_NAME --image 150187231 --size s-1vcpu-1gb --region nyc1 --wait 
+      - name: Store saasmvp SSH public key in DigitalOcean Docker Droplet
+        if: env.exists == 'false'
+        run: doctl compute ssh-key create saasmvp --public-key "${{ secrets.SAASMVP_SSH_KEY_PUB }}"
+      - name: Next Steps
+        if: env.exists == 'false'
+        run: echo "::notice::You WILL NEED your EMAIL from DigitalOcean regarding Droplet Creation BEFORE running Github Actions saasmvp-configure-droplet.yaml. See README.md"
+      - name: Notification
+        if: env.exists == 'true'
+        run: echo "::notice::DigtalOcean saasmvp droplet has already been created"
+
+  
+   

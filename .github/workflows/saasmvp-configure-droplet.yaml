@@ -1,0 +1,124 @@
+# --- saasmvp-configure-droplet.yaml --- 
+# Github Workflow File
+# Deploys sassmvp to DigitalOcean
+#
+# richard l. gregg
+# october 22, 2023 -!*!- HAPPY BIRHDAY DAD! -!*!-
+
+---
+name: saasmvp-configure-droplet
+
+on: 
+  - workflow_dispatch
+
+env:
+  DOMAIN_NAME: "demo.saasmvp.org"
+
+jobs:
+  configure-droplet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install DigitalOcean doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Does saasmvp Docker Droplet Exist?
+        run: |
+          if doctl compute droplet get $DOMAIN_NAME --format Name | grep -Po $DOMAIN_NAME >/dev/null
+          then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
+
+      - name: Get DigitalOcean saasmvp Docker Droplet IP Address
+        if: env.exists == 'true'
+        id: droplet-ipaddr
+        run: |
+          echo "ipaddr=$(echo $(doctl compute droplet get $DOMAIN_NAME --format PublicIPv4 | grep -Po '(?:[0-9]{1,3}\.){3}[0-9]{1,3}'))" >> $GITHUB_OUTPUT
+    
+      - name: Get saasmvp.config from Github Repository
+        if: env.exists == 'true'
+        uses: actions/checkout@v3
+        with:
+          sparse-checkout: |
+            saasmvp.config
+  
+      - name: Create saasmvp.config Artifact from Github Repository
+        if: env.exists == 'true'
+        run: tar -czf "${GITHUB_SHA}"-saasmvp.config.tar.gz saasmvp.config
+
+      - name: Upload saasmvp.config Artifact to Github Actions
+        if: env.exists == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: saasmvp.config
+          path: ${{github.sha}}-saasmvp.config.tar.gz
+
+      - name: Get saasmvp.config Artifact from Gitbub Actions
+        if: env.exists == 'true'
+        uses: actions/download-artifact@v3
+        with:
+          name: saasmvp.config
+
+      - name: Copy Public SSH Key to saasmvp Docker Droplet
+        if: env.exists == 'true'
+        # eliminates the need to enter a password when using SSH
+        # required to run the rest of this workflow
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{steps.droplet-ipaddr.outputs.ipaddr}}
+          port: 22
+          username: root
+          password: ${{secrets.SAASMVP_SSH_PASSWORD}}
+          key: ${{secrets.SAASMVP_SSH_KEY}}
+          script: |
+            if ! grep "${{secrets.SAASMVP_SSH_KEY_PUB}}" .ssh/authorized_keys
+            then
+              echo "${{secrets.SAASMVP_SSH_KEY_PUB}}" >> .ssh/authorized_keys
+            fi
+
+      - name: Copy saasmvp.config Artifact to DigitalOcean saasmvp Droplet
+        if: env.exists == 'true'
+        # use appleboy/scp-action@v0.1.3 - see https://github.com/appleboy/drone-scp/issues/170
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{steps.droplet-ipaddr.outputs.ipaddr}}
+          port: 22
+          username: root
+          key: ${{secrets.SAASMVP_SSH_KEY}}
+          source: ${{github.sha}}-saasmvp.config.tar.gz
+          target: "."
+        
+      - name: Untar saasmvp.config on DigitalOcean saasmvp Droplet and Set Permissions 
+        if: env.exists == 'true'
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          timeout: 2m
+          host: ${{steps.droplet-ipaddr.outputs.ipaddr}}
+          port: 22
+          username: root
+          key: ${{secrets.SAASMVP_SSH_KEY}}
+          script: |
+            tar -xf ${{github.sha}}-saasmvp.config.tar.gz
+            rm ${{github.sha}}-saasmvp.config.tar.gz
+            chown -R root:root saasmvp.config
+            chmod +x saasmvp.config/*.sh
+      
+      - name: Clean Up Github Artifacts
+        if: env.exists == 'true'
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: saasmvp.config
+
+      - name: Next Steps Notification
+        if: env.exists == 'true'
+        run: echo "::notice::NEXT STEPS 1) ssh root@${{steps.droplet-ipaddr.outputs.ipaddr}} and 2) run './saasmvp.sh' to finish configuration"
+             
+      - name: Error Notification
+        if: env.exists == 'false'
+        run: echo "::notice::The DigitalOcean saasmvp droplet does not exist. You must run Github Actions saasmvp-create-droplet.yaml first"
+          
+     
+   

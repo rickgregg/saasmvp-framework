@@ -1,0 +1,70 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker compose reference guide at
+# https://docs.docker.com/compose/compose-file/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+  nuxtapp:
+    container_name: saasmvp-nuxtapp
+    image: rickgregg/saasmvp-nuxtapp:latest
+    ports:
+      - 3000:3000
+    depends_on:
+      mysql:
+        condition: service_healthy
+  
+  mysql:
+    container_name: saasmvp-mysql
+    image: rickgregg/saasmvp-mysql:8.1.0
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      # Use root/example as user/password credentials
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      # make sure database is ready to accept connection requests from nuxt application
+      test: mysql --user=root --password=example  -e 'show databases;'
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 55
+  
+  adminer:
+    container_name: saasmvp-adminer
+    image: rickgregg/saasmvp-adminer:4.8.1
+    restart: always
+    ports:
+      - 8080:8080
+
+  nginx:
+    container_name: saasmvp-nginx
+    image: rickgregg/saasmvp-nginx:1.21.6
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      # using a bind mount
+      - /etc/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - nuxtapp
+  
+volumes:
+  mysql:
+
+networks:
+  default:
+    name: saasmvp-net
+    driver: bridge
+
+
+

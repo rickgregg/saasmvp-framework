@@ -1,0 +1,25 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.15.0",
+    "@saasmvp/nuxt-saasmvp-oauth": "^1.0.0",
+    "markdown-it": "^14.1.0",
+    "nuxt": "^3.12.1",
+    "prisma": "^5.15.0",
+    "tsx": "^4.15.4",
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.3"
+  },
+  "prisma": {
+    "seed": "tsx database/seed.ts"
+  }
+}

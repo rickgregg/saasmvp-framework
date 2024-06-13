@@ -1,0 +1,7 @@
+{
+  "oauth": {
+    "jwtKey": "FF92528C6D4C441CF853CF99E55E4129",
+    "logFlag": true
+  },
+  "protected": []
+}

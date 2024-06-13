@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  dev-nuxtapp:
+    container_name: dev-saasmvp-nuxtapp
+    image: "mcr.microsoft.com/devcontainers/javascript-node:0-20-bullseye"
+    volumes:
+      - ../..:/workspace:cached
+    network_mode: service:nginx
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # keep docker container running for debugging
+    command: sleep infinity
+
+  nginx:
+    container_name: saasmvp-nginx
+    image: nginx:1.21.6
+    build: ../nginx
+    ports:
+      - '80:80'
+    restart: on-failure
+    
+  mysql:
+    container_name: saasmvp-mysql
+    image: mysql:8.1.0
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      # Use root/example as user/password credentials
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      # make sure database is ready to accept connection requests from nuxt application
+      test: mysql --user=root --password=example  -e 'show databases;'
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 55    
+
+  adminer:
+    container_name: saasmvp-adminer
+    image: adminer:4.8.1
+    restart: always
+    ports:
+      - 8080:8080    
+volumes:
+  mysql:
+    name: saasmvp-mysql-vol
+    
+networks:
+  default:
+    name: saasmvp-net
+    driver: bridge
