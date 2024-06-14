@@ -73,6 +73,7 @@ USER root
 COPY package.json .
 
 # Copy additional required files
+COPY README.md .
 COPY ./server/smvp.oauth.json ./server/smvp.oauth.json
 
 # Copy the production dependencies from the deps stage and also
