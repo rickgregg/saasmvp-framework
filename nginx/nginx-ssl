@@ -5,7 +5,7 @@
 
 server {
     listen       80;
-    server_name  rest.saasmvp.org www.rest.saasmvp.org;
+    server_name  demo.saasmvp.org www.demo.saasmvp.org;
 
     location / {
         return 301 https://$host$request_uri;
@@ -14,10 +14,10 @@ server {
 
 server {
     listen 443 ssl;
-    server_name  rest.saasmvp.org www.rest.saasmvp.org;
+    server_name  demo.saasmvp.org www.demo.saasmvp.org;
 
-    ssl_certificate /etc/letsencrypt/live/rest.saasmvp.org/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/rest.saasmvp.org/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/demo.saasmvp.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/demo.saasmvp.org/privkey.pem;
    
     location / {
     proxy_pass http://nuxtapp:3000;
